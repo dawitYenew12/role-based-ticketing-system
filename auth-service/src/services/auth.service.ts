@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken';
 import { tokenTypes } from '../config/token';
 import { Token } from '../models/token.model';
 import { IToken } from '../models/token.model';
+import ApiError from '../utils/ApiError';
+import httpStatus from 'http-status';
 
 interface RegisterUserResponse {
   success: boolean;
@@ -42,8 +44,6 @@ export const generateToken = (
     expTime: expires.unix(), // Expiration time as a Unix timestamp
     type,
   };
-
-  logger.info(secret);
 
   return jwt.sign(payload, secret);
 };
@@ -93,7 +93,10 @@ const generateAuthTokens = async (
     };
   } catch (error) {
     logger.error(`Error generating auth tokens: ${(error as Error).message}`);
-    throw new Error('Failed to generate auth tokens');
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to generate auth tokens',
+    );
   }
 };
 
@@ -109,13 +112,13 @@ const verifyToken = async (token: string, type: string): Promise<IToken> => {
     });
 
     if (!tokenDoc) {
-      throw new Error('Token not found');
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
     }
 
     return tokenDoc;
   } catch (error) {
     logger.error(`Error verifying token: ${(error as Error).message}`);
-    throw new Error('Failed to verify token');
+    throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token');
   }
 };
 
@@ -127,7 +130,7 @@ const refreshAuthToken = async (
     const user = await User.findById(refreshTokenDoc.user);
 
     if (!user) {
-      throw new Error('User not found');
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'User not found');
     }
 
     await refreshTokenDoc.deleteOne();
@@ -135,7 +138,10 @@ const refreshAuthToken = async (
     return await generateAuthTokens(user._id.toString());
   } catch (error) {
     logger.error(`Error refreshing auth token: ${(error as Error).message}`);
-    throw new Error('Failed to refresh auth token');
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to refresh token',
+    );
   }
 };
 
@@ -176,7 +182,10 @@ const registerUser = async (
     };
   } catch (error: any) {
     logger.error(`Error registering user: ${error.message}`);
-    throw new Error('Failed to register user');
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to register user',
+    );
   }
 };
 
@@ -199,7 +208,10 @@ const authenticateUser = async (
     return { success: true, message: 'Login successful', tokens: tokens };
   } catch (error: any) {
     logger.error(`Authentication error: ${error.message}`);
-    throw new Error(`Failed to authenticate user: ${error.message}`);
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to authenticate user',
+    );
   }
 };
 

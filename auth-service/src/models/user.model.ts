@@ -1,6 +1,8 @@
 import mongoose, { Schema, model, Document, Model } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcryptjs';
+import httpStatus from 'http-status';
+import ApiError from '../utils/ApiError';
 
 export enum UserRole {
   ADMIN = 'admin201', // eslint-disable-line no-unused-vars
@@ -29,7 +31,7 @@ const userSchema: Schema<IUser> = new Schema(
       lowercase: true,
       validate(value: string) {
         if (!validator.isEmail(value)) {
-          throw new Error('Invalid Email');
+          throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid email address');
         }
       },
     },
@@ -40,7 +42,8 @@ const userSchema: Schema<IUser> = new Schema(
       minlength: 8,
       validate(value: string) {
         if (!validator.isStrongPassword(value)) {
-          throw new Error(
+          throw new ApiError(
+            httpStatus.BAD_REQUEST,
             'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character.',
           );
         }

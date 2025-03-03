@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+import ApiError from '../utils/ApiError';
+import httpStatus from 'http-status';
+
 dotenv.config();
 
 import envVarSchema from '../validations/env.validation';
@@ -18,7 +21,10 @@ interface Config {
 const { error, value: envVars } = envVarSchema.validate(process.env);
 
 if (error) {
-  throw new Error(`Config validation error: ${error.message}`);
+  throw new ApiError(
+    httpStatus.INTERNAL_SERVER_ERROR,
+    'Environment validation error',
+  );
 }
 
 const config: Config = {

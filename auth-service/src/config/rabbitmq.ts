@@ -1,6 +1,8 @@
 import amqp from 'amqplib';
 import config from './config';
 import logger from '../config/logger';
+import ApiError from '../utils/ApiError';
+import httpStatus from 'http-status';
 import { setTimeout } from 'timers';
 
 let channel: amqp.Channel | null = null;
@@ -18,7 +20,10 @@ const connectRabbitMQ = async (): Promise<void> => {
 
 const getChannel = (): amqp.Channel | null => {
   if (!channel) {
-    throw new Error('RabbitMQ channel not established');
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'RabbitMQ channel not available',
+    );
   }
   return channel;
 };
