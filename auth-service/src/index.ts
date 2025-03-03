@@ -14,7 +14,7 @@ connectDB();
 connectRabbitMQ();
 
 // Routes
-app.use('/auth', authRoutes);
+app.use('/v1/auth', authRoutes);
 
 app.listen(PORT, () => {
   logger.info(`Auth Service running on port ${PORT}`);

@@ -8,6 +8,11 @@ interface Config {
   dbUri: string;
   env: string;
   rabbitMQUri: string;
+  jwt: {
+    secretKey: string;
+    accessTokenMinutes: number;
+    refreshTokenDays: number;
+  };
 }
 
 const { error, value: envVars } = envVarSchema.validate(process.env);
@@ -21,6 +26,11 @@ const config: Config = {
   dbUri: envVars.DB_URI,
   env: envVars.NODE_ENV,
   rabbitMQUri: envVars.RABBITMQ_URL,
+  jwt: {
+    secretKey: envVars.JWT_SECRET,
+    accessTokenMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,
+    refreshTokenDays: envVars.JWT_REFRESS_EXPIRATION_DAYS,
+  },
 };
 
 export default config;

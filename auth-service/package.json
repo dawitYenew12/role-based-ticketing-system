@@ -1,5 +1,5 @@
 {
-  "name": "user-service",
+  "name": "auth-service",
   "version": "1.0.0",
   "description": "",
   "main": "src/index.ts",
@@ -21,6 +21,7 @@
     "@types/validator": "^13.12.2",
     "amqplib": "^0.10.5",
     "bcryptjs": "^3.0.2",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "http-status": "^2.1.0",
