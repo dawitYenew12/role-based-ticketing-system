@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import authService from '../services/auth.service';
-import logger from '../config/logger';
 import httpStatus from 'http-status';
 import { catchAsync } from '../utils/catchAsync';
 
@@ -24,8 +23,6 @@ export const login = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     const result = await authService.authenticateUser(email, password);
-    logger.info('result: ');
-    logger.info(result);
     if (result.success) {
       res.status(httpStatus.OK).json({ success: true, token: result.tokens });
     } else {

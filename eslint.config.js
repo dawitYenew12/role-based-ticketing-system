@@ -15,7 +15,7 @@ export default [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
-        project: './auth-service/tsconfig.json',
+        project: ['./auth-service/tsconfig.json', './user-service/tsconfig.json'],
       },
     },
     plugins: {

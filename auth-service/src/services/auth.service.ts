@@ -61,7 +61,6 @@ const generateAuthTokens = async (
       accessTokenExpires,
       tokenTypes.ACCESS,
     );
-    logger.info(`Access token: ${accessToken}`);
 
     const refreshTokenExpires = dayjs().add(
       config.jwt.refreshTokenDays,
