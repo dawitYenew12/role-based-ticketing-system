@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/config/config.ts","./src/config/db.ts","./src/config/logger.ts","./src/config/rabbitmq.ts","./src/controllers/auth.controller.ts","./src/models/user.model.ts","./src/routes/auth.routes.ts","./src/services/auth.service.ts","./src/validations/env.validation.ts"],"version":"5.8.2"}
