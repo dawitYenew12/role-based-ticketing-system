@@ -4,6 +4,24 @@ import logger from '../config/logger';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
 
+const createUserProfile = async (
+  userId: string,
+  email: string,
+  role: string,
+): Promise<void> => {
+  try {
+    const userProfile = new UserProfile({ userId, email, role });
+    await userProfile.save();
+    logger.info(`User profile created for: ${email}`);
+  } catch (error) {
+    logger.error(`Error creating user profile: ${(error as Error).message}`);
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to create user profile',
+    );
+  }
+};
+
 const getUserProfile = async (
   userId: string,
   requestingUserId: string,
@@ -25,9 +43,13 @@ const getUserProfile = async (
   return userProfile;
 };
 
-const getAllUsers = async () => {
+const getAllUsers = async (userRole: string) => {
   try {
-    const users = await UserProfile.find().select('-__v');
+    if (userRole !== UserRole.ADMIN) {
+      logger.warn(`Unauthorized access attempt to retrieve all users`);
+      throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
+    }
+    const users = await UserProfile.find();
     logger.info('All users retrieved by admin');
     return users;
   } catch (error: any) {
@@ -35,4 +57,4 @@ const getAllUsers = async () => {
   }
 };
 
-export default { getUserProfile, getAllUsers };
+export default { getUserProfile, getAllUsers, createUserProfile };

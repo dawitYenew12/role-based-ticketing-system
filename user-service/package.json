@@ -20,6 +20,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/validator": "^13.12.2",
     "amqplib": "^0.10.5",
+    "axios": "^1.8.1",
     "bcryptjs": "^3.0.2",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",

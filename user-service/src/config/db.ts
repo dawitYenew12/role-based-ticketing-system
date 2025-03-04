@@ -5,7 +5,7 @@ import logger from '../config/logger';
 const connectDB = async (): Promise<void> => {
   try {
     await mongoose.connect(config.dbUri);
-    logger.info('MongoDB connected for auth-service');
+    logger.info('MongoDB connected for user-service');
   } catch (error) {
     logger.error('Error connecting to MongoDB: ', error);
   }

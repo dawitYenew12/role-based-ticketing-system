@@ -1,4 +1,4 @@
-import { User } from '../models/user.model';
+import { User, IUser } from '../models/user.model';
 import logger from '../config/logger';
 import { getChannel } from '../config/rabbitmq';
 import dayjs from 'dayjs';
@@ -9,6 +9,7 @@ import { Token } from '../models/token.model';
 import { IToken } from '../models/token.model';
 import ApiError from '../utils/ApiError';
 import httpStatus from 'http-status';
+import mongoose from 'mongoose';
 
 interface RegisterUserResponse {
   success: boolean;
@@ -41,7 +42,7 @@ export const generateToken = (
   const payload: TokenPayload = {
     subject: userId, // The 'subject' field typically represents the user ID
     issueDate: dayjs().unix(), // Issue date as a Unix timestamp
-    expTime: expires.unix(), // Expiration time as a Unix timestamp
+    expTime: expires.unix(),
     type,
   };
 
@@ -188,6 +189,49 @@ const registerUser = async (
   }
 };
 
+const registerUserWithRole = async (
+  email: string,
+  password: string,
+  role: string,
+): Promise<RegisterUserResponse> => {
+  try {
+    logger.info('before');
+    if (await User.isEmailRegistered(email)) {
+      logger.info('bitch');
+      return { success: false, message: 'Email already registered' };
+    }
+    logger.info('hehre');
+    const user = new User({ email, password, role });
+    await user.save();
+
+    const channel = getChannel();
+    if (channel) {
+      channel.sendToQueue(
+        'user-created',
+        Buffer.from(
+          JSON.stringify({
+            userId: user._id,
+            email: user.email,
+            role: user.role,
+          }),
+        ),
+      );
+    }
+    logger.info(`User registered: ${user.email}`);
+    return {
+      success: true,
+      message: 'User registered successfully',
+      userId: user._id.toString(),
+    };
+  } catch (error: any) {
+    logger.error(`Error registering user: ${error.message}`);
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Failed to register user',
+    );
+  }
+};
+
 const authenticateUser = async (
   email: string,
   password: string,
@@ -214,4 +258,15 @@ const authenticateUser = async (
   }
 };
 
-export default { registerUser, authenticateUser, refreshAuthToken };
+export const getUserById = async (userId: string): Promise<IUser | null> => {
+  const id = new mongoose.Types.ObjectId(userId);
+  const user = await User.findById(id);
+  return user;
+};
+
+export default {
+  registerUser,
+  authenticateUser,
+  refreshAuthToken,
+  registerUserWithRole,
+};
