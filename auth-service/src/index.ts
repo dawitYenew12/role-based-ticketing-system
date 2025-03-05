@@ -8,6 +8,8 @@ import config from './config/config';
 import { errorHandler, errorConverter } from './middleware/error';
 import ApiError from './utils/ApiError';
 import httpStatus from 'http-status';
+import cors from 'cors';
+import { url } from 'inspector';
 
 function exitHandler(server: http.Server) {
   if (server) {
@@ -33,6 +35,25 @@ const startServer = async () => {
 
   connectDB();
   connectRabbitMQ();
+
+  if (config.env === 'production') {
+    app.use(cors({ origin: url }));
+    app.options('*', cors({ origin: url }));
+  } else {
+    app.use(
+      cors({
+        origin: 'http://localhost:5173', // Frontend URL
+        credentials: true, // Allow credentials
+      }),
+    );
+    app.options(
+      '*',
+      cors({
+        origin: 'http://localhost:5173',
+        credentials: true,
+      }),
+    );
+  }
 
   app.use('/v1/auth', authRoutes);
 

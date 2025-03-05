@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-// import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+// import { useNavigate } from 'react-router-dom';
 import { withNavigation } from './withNavigation';
 // import { useNavigation } from './NavigationContext';
 import { NavigationContext } from './NavigationContext';
+
 
 class Login extends Component {
   constructor(props) {
@@ -23,17 +24,17 @@ class Login extends Component {
     e.preventDefault();
     const { email, password } = this.state;
     try {
-      const response = await axios.post('http://localhost:3000/v1/auth/login', { email, password });
+      const response = await axios.post('http://localhost:3000/v1/auth/login', 
+        { email, password },
+        { withCredentials: true } 
+      );
+      const token = response.data.token.access.token;
+      localStorage.setItem('access_token', token);
+      const decodedToken = jwtDecode(token);
+      
       if (response.status === 200 && response.data.success) {
-        const token = response.data.token.access.token;
-        const decodedToken = jwtDecode(token);
-        console.log(decodedToken)
-        // Set cookie with security flags
-        document.cookie = `access=${token}; path=/; HttpOnly; Secure; SameSite=Strict; max-age=86400`;
-        
         const role = decodedToken.role;
         if (role === 'admin201') {
-          console.log('here');
           navigate('/adminDashboard');
         } else if (role === 'user202') {
           navigate('/userDashboard');

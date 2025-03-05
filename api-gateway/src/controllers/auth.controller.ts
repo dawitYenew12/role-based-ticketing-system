@@ -20,7 +20,7 @@ export const signup = catchAsync(
 export const signupBySelectingRole = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
     const { email, password, role } = req.body;
-
+    logger.info('here');
     try {
       // Forward request to Auth Service
       const response = await axios.post(
@@ -64,7 +64,6 @@ export const signupBySelectingRole = catchAsync(
 export const login = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
-
     // Forward request to Auth Service
     const response = await axios.post('http://localhost:3001/v1/auth/login', {
       email,

@@ -2,7 +2,7 @@ import { getChannel } from '../config/rabbitmq';
 import redisClient from '../config/redis';
 import logger from '../config/logger';
 
-export const userCreatedListner = async (): Promise<void> => {
+export const initializeUserService = async (): Promise<void> => {
   const channel = getChannel();
   if (channel) {
     await channel.assertQueue('user-created', { durable: true });
@@ -13,11 +13,12 @@ export const userCreatedListner = async (): Promise<void> => {
             message.content.toString(),
           );
 
+          // Cache user details in Redis
           await redisClient.set(
             `user:${userId}`,
             JSON.stringify({ email, role }),
           );
-          logger.info(`User created: ${userId}`);
+          logger.info(`User created and cached: ${userId}`);
 
           channel.ack(message);
         } catch (error) {
@@ -26,6 +27,7 @@ export const userCreatedListner = async (): Promise<void> => {
         }
       }
     });
+    logger.info('User service initialized and listening for events');
   }
 };
 

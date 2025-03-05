@@ -7,6 +7,9 @@ import config from './config/config';
 import { errorHandler, errorConverter } from './middleware/error';
 import ApiError from './utils/ApiError';
 import httpStatus from 'http-status';
+import { connectRabbitMQ } from './config/rabbitmq';
+import { initializeUserService } from './services/user.service';
+import './config/redis'; // This will initialize Redis connection
 
 function exitHandler(server: http.Server) {
   if (server) {
@@ -19,18 +22,16 @@ function exitHandler(server: http.Server) {
   }
 }
 
-function unExpectedErrorHandler(server: http.Server) {
-  return function (error: Error) {
-    logger.error(error);
-    exitHandler(server);
-  };
-}
-
 const startServer = async () => {
   const app = express();
   app.use(express.json());
 
-  connectDB();
+  // Connect to MongoDB
+  await connectDB();
+
+  // Connect to RabbitMQ and initialize user service
+  await connectRabbitMQ();
+  await initializeUserService();
 
   app.use('/v1', ticketRoutes);
 
@@ -45,14 +46,31 @@ const startServer = async () => {
   const server = httpServer.listen(config.port, () => {
     logger.info(`Ticket Service running on port ${config.port}`);
   });
-  process.on('uncaughtException', unExpectedErrorHandler(server));
-  process.on('unhandledRejection', unExpectedErrorHandler(server));
-  process.on('SIGTERM', () => {
-    logger.info('SIGTERM received');
+
+  const gracefulShutdown = async () => {
+    logger.info('Received shutdown signal');
     if (server) {
-      server.close();
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    } else {
+      process.exit(0);
     }
+  };
+
+  process.on('uncaughtException', (error: Error) => {
+    logger.error('Uncaught Exception:', error);
+    exitHandler(server);
   });
+
+  process.on('unhandledRejection', (error: Error) => {
+    logger.error('Unhandled Rejection:', error);
+    exitHandler(server);
+  });
+
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
 };
 
 startServer();

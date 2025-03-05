@@ -254,14 +254,15 @@ const authenticateUser = async (
 }> => {
   try {
     const user = await User.findOne({ email });
+    logger.info(password);
     if (!user || !(await user.isPasswordMatch(password))) {
+      logger.info('Invalid credentials');
       return { success: false, message: 'Invalid credentials' };
     }
     const tokens = await generateAuthTokens(
       user._id.toString(),
       user.role.toString(),
     );
-    logger.info(`User logged in: ${email}`);
     return { success: true, message: 'Login successful', tokens: tokens };
   } catch (error: any) {
     logger.error(`Authentication error: ${error.message}`);

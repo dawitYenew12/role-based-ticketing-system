@@ -22,18 +22,16 @@ class UserDashboard extends Component {
 
   fetchTickets = async () => {
     try {
-      const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('access='))
-        .split('=')[1];
+      const accessToken = localStorage.getItem('access_token');
       const response = await axios.get('http://localhost:3000/v1/ticket/own', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log('response: ', response);
-      if (response.status === 200) {
-        this.setState({ tickets: response.data.data });
+      console.log('response: ', response.data.sucess);
+      if (response.status === 200 && response.data.sucess) {
+        console.log('tickets: ', response.data.data.tickets);
+        this.setState({ tickets: response.data.data.tickets });
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
@@ -47,11 +45,8 @@ class UserDashboard extends Component {
   handleSubmit = async () => {
     const { title, description } = this.state;
     try {
-      const token = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('access='))
-        .split('=')[1];
-      const decodedToken = jwtDecode(token);
+      const accessToken = localStorage.getItem('access_token');
+      const decodedToken = jwtDecode(accessToken);
       const createdBy = decodedToken.subject; // Assuming 'sub' is the subject field in the token
 
       const response = await axios.post(
@@ -59,7 +54,7 @@ class UserDashboard extends Component {
         { title, description, createdBy },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       );

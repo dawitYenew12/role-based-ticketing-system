@@ -33,6 +33,7 @@ export const signupBySelectingRole = catchAsync(
       password,
       role,
     );
+    logger.info(JSON.stringify(result));
     if (result.success) {
       res
         .status(httpStatus.CREATED)
@@ -50,7 +51,19 @@ export const login = catchAsync(
     const { email, password } = req.body;
     const result = await authService.authenticateUser(email, password);
     if (result.success) {
-      res.status(httpStatus.OK).json({ success: true, token: result.tokens });
+      // Set the access token as an HTTP-only cookie
+      res.cookie('access_token', result.tokens?.access.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/',
+      });
+
+      res.status(httpStatus.OK).json({
+        success: true,
+        token: result.tokens,
+      });
     } else {
       res
         .status(httpStatus.UNAUTHORIZED)

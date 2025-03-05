@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
+import logger from '../config/logger';
 
 export const authenticate = async (
   req: Request,
@@ -10,6 +11,7 @@ export const authenticate = async (
 ): Promise<void> => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
+    logger.info(token);
     if (!token) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Authentication required');
     }
