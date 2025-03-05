@@ -2,9 +2,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export enum TicketStatus {
-  OPEN = 'open',
-  IN_PROGRESS = 'In Progress',
-  ClOSED = 'closed',
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  CLOSED = 'CLOSED',
 }
 
 export interface ITicket extends Document {

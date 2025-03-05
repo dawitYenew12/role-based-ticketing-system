@@ -32,7 +32,6 @@ const getAllUsers = async (userRole: string) => {
       throw new ApiError(httpStatus.FORBIDDEN, 'Access denied');
     }
     const users = await UserProfile.find();
-    logger.info('All users retrieved by admin');
     return users;
   } catch (error: any) {
     throw new Error(`Error retrieving all users: ${error.message}`);

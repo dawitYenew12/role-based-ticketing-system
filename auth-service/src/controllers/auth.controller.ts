@@ -38,7 +38,6 @@ export const signupBySelectingRole = catchAsync(
         .status(httpStatus.CREATED)
         .json({ success: true, message: 'User registered successfully' });
     } else {
-      logger.info(result.message);
       res
         .status(httpStatus.BAD_REQUEST)
         .json({ success: false, message: result.message });
@@ -86,15 +85,11 @@ export const validateToken = async (
   }
 
   try {
-    logger.info('inside');
     const decoded = jwt.verify(token, config.jwt.secretKey);
-    logger.info('decoded');
-    logger.info(JSON.stringify(decoded));
     if ((decoded as any).type !== tokenTypes.ACCESS) {
       throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token type');
     }
     const userId = (decoded as any).subject;
-    logger.info(userId);
 
     const user = await getUserById(userId);
 

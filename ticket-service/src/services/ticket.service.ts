@@ -1,7 +1,8 @@
 import logger from '../config/logger';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
-import Ticket from '../models/ticket.model';
+import Ticket, { TicketStatus } from '../models/ticket.model';
+import mongoose from 'mongoose';
 
 const createTicket = async (
   title: string,
@@ -22,10 +23,24 @@ const createTicket = async (
   }
 };
 
-const getOwnTickets = async (userId: string): Promise<any> => {
+const getOwnTickets = async (
+  userId: string,
+  page: number = 1,
+  limit: number = 10,
+): Promise<any> => {
   try {
-    const tickets = await Ticket.find({ createdBy: userId });
-    return tickets;
+    const skip = (page - 1) * limit;
+    const tickets = await Ticket.find({ createdBy: userId })
+      .skip(skip)
+      .limit(limit);
+    const total = await Ticket.countDocuments({ createdBy: userId });
+
+    return {
+      tickets,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalTickets: total,
+    };
   } catch (error) {
     logger.error(`Error getting tickets: ${error}`);
     throw new ApiError(
@@ -35,10 +50,21 @@ const getOwnTickets = async (userId: string): Promise<any> => {
   }
 };
 
-const getAllTickets = async (): Promise<any> => {
+const getAllTickets = async (
+  page: number = 1,
+  limit: number = 10,
+): Promise<any> => {
   try {
-    const tickets = await Ticket.find({});
-    return tickets;
+    const skip = (page - 1) * limit;
+    const tickets = await Ticket.find({}).skip(skip).limit(limit);
+    const total = await Ticket.countDocuments({});
+
+    return {
+      tickets,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalTickets: total,
+    };
   } catch (error) {
     logger.error(`Error getting tickets: ${error}`);
     throw new ApiError(
@@ -47,4 +73,36 @@ const getAllTickets = async (): Promise<any> => {
     );
   }
 };
-export default { createTicket, getOwnTickets, getAllTickets };
+
+const updateTicketStatus = async (
+  ticketId: string,
+  status: TicketStatus,
+): Promise<any> => {
+  try {
+    logger.info('seriv');
+    const ticketIdObj = new mongoose.Types.ObjectId(ticketId);
+    logger.info(ticketIdObj);
+    const ticket = await Ticket.findById(ticketIdObj);
+    if (!ticket) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Ticket not found');
+    }
+
+    ticket.status = status;
+    ticket.updatedAt = new Date();
+    const updatedTicket = await ticket.save();
+    return updatedTicket;
+  } catch (error) {
+    logger.error(`Error updating ticket status: ${error}`);
+    throw new ApiError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      'Error updating ticket status',
+    );
+  }
+};
+
+export default {
+  createTicket,
+  getOwnTickets,
+  getAllTickets,
+  updateTicketStatus,
+};

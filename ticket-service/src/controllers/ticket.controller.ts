@@ -5,6 +5,7 @@ import ApiError from '../utils/ApiError';
 import logger from '../config/logger';
 import { catchAsync } from '../utils/catchAsync';
 import { AuthenticatedRequest } from '../types';
+import { TicketStatus } from '../models/ticket.model';
 
 export const createTicket = catchAsync(async (req: Request, res: Response) => {
   const authenticatedReq = req as AuthenticatedRequest;
@@ -37,6 +38,23 @@ export const getAllTickets = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(httpStatus.FORBIDDEN, 'User not authorized');
   }
   const tickets = await ticketService.getAllTickets();
-  logger.info(`Tickets: ${tickets}`);
+  logger.info('Tickets: ', JSON.stringify(tickets));
   res.status(httpStatus.OK).json({ sucess: true, data: tickets });
 });
+
+export const updateTicketStatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const authenticatedReq = req as AuthenticatedRequest;
+    if (!authenticatedReq.user) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'User not authenticated');
+    }
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!Object.values(TicketStatus).includes(status)) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid ticket status');
+    }
+    const updatedTicket = await ticketService.updateTicketStatus(id, status);
+    res.status(httpStatus.OK).json({ success: true, data: updatedTicket });
+  },
+);

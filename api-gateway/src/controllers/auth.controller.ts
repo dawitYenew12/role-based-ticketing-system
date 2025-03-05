@@ -6,7 +6,6 @@ import logger from '../config/logger';
 export const signup = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
-
     // Forward request to Auth Service
     const response = await axios.post('http://localhost:3001/v1/auth/signup', {
       email,
@@ -33,7 +32,6 @@ export const signupBySelectingRole = catchAsync(
         },
       );
 
-      logger.info(JSON.stringify(response.data));
       logger.info(`User registered with role: ${email}`);
 
       res.status(response.status).json(response.data);
@@ -90,7 +88,6 @@ export const refreshToken = catchAsync(
       },
     );
 
-    logger.info(`Token refreshed for user`);
     res.status(response.status).json(response.data);
   },
 );

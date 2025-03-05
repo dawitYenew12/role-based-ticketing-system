@@ -10,6 +10,7 @@ import { IToken } from '../models/token.model';
 import ApiError from '../utils/ApiError';
 import httpStatus from 'http-status';
 import mongoose from 'mongoose';
+import { UserRole } from '../models/user.model';
 
 interface RegisterUserResponse {
   success: boolean;
@@ -31,16 +32,19 @@ interface TokenPayload {
   issueDate: number;
   expTime: number;
   type: string;
+  role: string;
 }
 
 export const generateToken = (
   userId: string,
   expires: dayjs.Dayjs,
   type: string,
+  userRole: string,
   secret: string = config.jwt.secretKey,
 ): string => {
   const payload: TokenPayload = {
     subject: userId, // The 'subject' field typically represents the user ID
+    role: userRole,
     issueDate: dayjs().unix(), // Issue date as a Unix timestamp
     expTime: expires.unix(),
     type,
@@ -51,6 +55,7 @@ export const generateToken = (
 
 const generateAuthTokens = async (
   userId: string,
+  userRole: string,
 ): Promise<AuthTokensResponse> => {
   try {
     const accessTokenExpires = dayjs().add(
@@ -61,6 +66,7 @@ const generateAuthTokens = async (
       userId,
       accessTokenExpires,
       tokenTypes.ACCESS,
+      userRole,
     );
 
     const refreshTokenExpires = dayjs().add(
@@ -71,6 +77,7 @@ const generateAuthTokens = async (
       userId,
       refreshTokenExpires,
       tokenTypes.REFRESH,
+      userRole,
     );
 
     await Token.create({
@@ -135,7 +142,7 @@ const refreshAuthToken = async (
 
     await refreshTokenDoc.deleteOne();
 
-    return await generateAuthTokens(user._id.toString());
+    return await generateAuthTokens(user._id.toString(), user.role);
   } catch (error) {
     logger.error(`Error refreshing auth token: ${(error as Error).message}`);
     throw new ApiError(
@@ -195,13 +202,18 @@ const registerUserWithRole = async (
   role: string,
 ): Promise<RegisterUserResponse> => {
   try {
-    logger.info('before');
     if (await User.isEmailRegistered(email)) {
-      logger.info('bitch');
       return { success: false, message: 'Email already registered' };
     }
-    logger.info('hehre');
-    const user = new User({ email, password, role });
+    let modifiedRole: string = role;
+    if (role) {
+      if (role === 'admin') {
+        modifiedRole = UserRole.ADMIN;
+      } else if (role === 'user') {
+        modifiedRole = UserRole.USER;
+      }
+    }
+    const user = new User({ email, password, role: modifiedRole });
     await user.save();
 
     const channel = getChannel();
@@ -245,8 +257,10 @@ const authenticateUser = async (
     if (!user || !(await user.isPasswordMatch(password))) {
       return { success: false, message: 'Invalid credentials' };
     }
-
-    const tokens = await generateAuthTokens(user._id.toString());
+    const tokens = await generateAuthTokens(
+      user._id.toString(),
+      user.role.toString(),
+    );
     logger.info(`User logged in: ${email}`);
     return { success: true, message: 'Login successful', tokens: tokens };
   } catch (error: any) {
