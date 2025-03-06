@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Modal, Button, Select, Form, Input, message } from 'antd';
+import { QueryClient } from '@tanstack/react-query';
 // import { withNavigation } from './withNavigation';
 // import { NavigationContext } from './NavigationContext';
 
@@ -18,8 +19,11 @@ class AdminDashboard extends Component {
       selectedTicketId: null,
       isStatusModalVisible: false,
       isRegisterModalVisible: false,
+      isLoading: true,
+      error: null,
     };
     this.registerForm = React.createRef();
+    this.queryClient = new QueryClient();
   }
 
   componentDidMount() {
@@ -28,6 +32,17 @@ class AdminDashboard extends Component {
 
   fetchTickets = async () => {
     try {
+      // Check if we have cached data
+      const cachedData = await this.queryClient.getQueryData(['tickets', this.state.currentPage]);
+      if (cachedData) {
+        this.setState({
+          tickets: cachedData.tickets,
+          totalPages: Math.ceil(cachedData.tickets.length / this.state.pageSize),
+          isLoading: false,
+        });
+        return;
+      }
+
       const accessToken = localStorage.getItem('access_token');
       const response = await axios.get(
         `http://localhost:3000/v1/ticket/all?page=${this.state.currentPage}&limit=10`,
@@ -37,24 +52,32 @@ class AdminDashboard extends Component {
           },
         },
       );
-      console.log(response.data);
+
       if (response.status === 200 && response.data.sucess === true) {
-        // Ensure tickets is an array
         const tickets = Array.isArray(response.data.data.tickets)
           ? response.data.data.tickets
           : [];
         const totalPages = Math.ceil(tickets.length / this.state.pageSize);
+        
+        // Cache the data
+        await this.queryClient.setQueryData(['tickets', this.state.currentPage], {
+          tickets,
+          totalPages,
+        });
+
         this.setState({
           tickets,
           totalPages,
+          isLoading: false,
         });
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
-      // Initialize with empty array if there's an error
       this.setState({
         tickets: [],
         totalPages: 1,
+        isLoading: false,
+        error: 'Failed to fetch tickets',
       });
     }
   };
@@ -74,11 +97,14 @@ class AdminDashboard extends Component {
       );
 
       if (response.status === 200) {
+        // Invalidate the cache and refetch
+        await this.queryClient.invalidateQueries(['tickets']);
         this.setState({ isStatusModalVisible: false });
         this.fetchTickets();
       }
     } catch (error) {
       console.error('Error updating ticket status:', error);
+      message.error('Failed to update ticket status');
     }
   };
 
@@ -158,8 +184,31 @@ class AdminDashboard extends Component {
   };
 
   render() {
-    const { currentPage, totalPages, isStatusModalVisible, selectedStatus, isRegisterModalVisible } =
-      this.state;
+    const { 
+      currentPage, 
+      totalPages, 
+      isStatusModalVisible, 
+      selectedStatus, 
+      isRegisterModalVisible,
+      isLoading,
+      error 
+    } = this.state;
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl">Loading tickets...</div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl text-red-500">{error}</div>
+        </div>
+      );
+    }
 
     const currentTickets = this.getCurrentPageTickets();
 
@@ -318,11 +367,12 @@ class AdminDashboard extends Component {
               Register
             </Button>,
           ]}
-        >
+          >
           <Form
             ref={this.registerForm}
             layout="vertical"
             name="register_form"
+            // style={{ marginBottom: '20px' }} 
           >
             
             <Form.Item

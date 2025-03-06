@@ -251,13 +251,18 @@ const authenticateUser = async (
   success: boolean;
   message: string;
   tokens?: AuthTokensResponse;
+  statusCode?: number;
 }> => {
   try {
     const user = await User.findOne({ email });
     logger.info(password);
     if (!user || !(await user.isPasswordMatch(password))) {
       logger.info('Invalid credentials');
-      return { success: false, message: 'Invalid credentials' };
+      return {
+        success: false,
+        message: 'Invalid credentials',
+        statusCode: 401,
+      };
     }
     const tokens = await generateAuthTokens(
       user._id.toString(),

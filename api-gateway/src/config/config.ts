@@ -11,6 +11,7 @@ interface Config {
   dbUri: string;
   env: string;
   rabbitMQUri: string;
+  redisUrl: string;
 }
 
 const { error, value: envVars } = envVarSchema.validate(process.env);
@@ -27,6 +28,7 @@ const config: Config = {
   dbUri: envVars.DB_URI,
   env: envVars.NODE_ENV,
   rabbitMQUri: envVars.RABBITMQ_URL,
+  redisUrl: envVars.REDIS_URL,
 };
 
 export default config;

@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { Modal, Button } from 'antd';
+import { Modal, Button, message } from 'antd';
+import { QueryClient } from '@tanstack/react-query';
+import { validatePassword } from '../utils/validation';
 
 class UserDashboard extends Component {
   constructor(props) {
@@ -13,7 +15,14 @@ class UserDashboard extends Component {
       successMessage: '',
       errorMessage: '',
       isModalVisible: false,
+      isLoading: true,
+      error: null,
+      errors: {
+        title: '',
+        description: ''
+      }
     };
+    this.queryClient = new QueryClient();
   }
 
   componentDidMount() {
@@ -22,32 +31,99 @@ class UserDashboard extends Component {
 
   fetchTickets = async () => {
     try {
+      // Check if we have cached data
+      const cachedData = await this.queryClient.getQueryData(['userTickets']);
+      if (cachedData) {
+        this.setState({
+          tickets: cachedData.tickets,
+          isLoading: false,
+        });
+        return;
+      }
+
       const accessToken = localStorage.getItem('access_token');
       const response = await axios.get('http://localhost:3000/v1/ticket/own', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log('response: ', response.data.sucess);
+
       if (response.status === 200 && response.data.sucess) {
-        console.log('tickets: ', response.data.data.tickets);
-        this.setState({ tickets: response.data.data.tickets });
+        const tickets = Array.isArray(response.data.data.tickets)
+          ? response.data.data.tickets
+          : [];
+
+        // Cache the data
+        await this.queryClient.setQueryData(['userTickets'], {
+          tickets,
+        });
+
+        this.setState({
+          tickets,
+          isLoading: false,
+        });
       }
     } catch (error) {
       console.error('Error fetching tickets:', error);
+      this.setState({
+        tickets: [],
+        isLoading: false,
+        error: 'Failed to fetch tickets',
+      });
     }
   };
 
+  validateFields = () => {
+    const { title, description } = this.state;
+    const errors = {
+      title: '',
+      description: ''
+    };
+
+    if (!title.trim()) {
+      errors.title = 'Title is required';
+    } else if (title.length < 3) {
+      errors.title = 'Title must be at least 3 characters long';
+    }
+
+    if (!description.trim()) {
+      errors.description = 'Description is required';
+    } else if (description.length < 10) {
+      errors.description = 'Description must be at least 10 characters long';
+    }
+
+    return {
+      isValid: !errors.title && !errors.description,
+      errors
+    };
+  };
+
   handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    this.setState({ 
+      [name]: value,
+      errors: {
+        ...this.state.errors,
+        [name]: ''  // Clear error when user starts typing
+      }
+    });
   };
 
   handleSubmit = async () => {
     const { title, description } = this.state;
+    
+    // Validate fields
+    const { isValid, errors } = this.validateFields();
+    if (!isValid) {
+      this.setState({ errors });
+      message.error('Please fix the form errors');
+      return;
+    }
+
     try {
       const accessToken = localStorage.getItem('access_token');
       const decodedToken = jwtDecode(accessToken);
-      const createdBy = decodedToken.subject; // Assuming 'sub' is the subject field in the token
+      const createdBy = decodedToken.subject;
 
       const response = await axios.post(
         'http://localhost:3000/v1/ticket',
@@ -60,12 +136,19 @@ class UserDashboard extends Component {
       );
 
       if (response.status === 201) {
+        // Invalidate the cache and refetch
+        await this.queryClient.invalidateQueries(['userTickets']);
+        
         this.setState({
+          title: '',
+          description: '',
           successMessage: 'Ticket created successfully!',
           errorMessage: '',
           isModalVisible: false,
         });
-        this.fetchTickets(); // Refresh the ticket list
+        
+        this.fetchTickets();
+        message.success('Ticket created successfully!');
       }
     } catch (error) {
       console.error('Ticket creation error:', error);
@@ -73,6 +156,7 @@ class UserDashboard extends Component {
         errorMessage: 'Failed to create ticket.',
         successMessage: '',
       });
+      message.error('Failed to create ticket');
     }
   };
 
@@ -81,7 +165,13 @@ class UserDashboard extends Component {
   };
 
   handleCancel = () => {
-    this.setState({ isModalVisible: false });
+    this.setState({
+      isModalVisible: false,
+      title: '',
+      description: '',
+      successMessage: '',
+      errorMessage: '',
+    });
   };
 
   render() {
@@ -92,7 +182,27 @@ class UserDashboard extends Component {
       successMessage,
       errorMessage,
       isModalVisible,
+      isLoading,
+      error,
+      errors
     } = this.state;
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl">Loading tickets...</div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl text-red-500">{error}</div>
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="mb-8">
@@ -201,9 +311,12 @@ class UserDashboard extends Component {
                 name="title"
                 value={title}
                 onChange={this.handleChange}
-                className="w-full border border-gray-300 p-2 rounded"
+                className={`w-full border ${errors.title ? 'border-red-500' : 'border-gray-300'} p-2 rounded`}
                 required
               />
+              {errors.title && (
+                <p className="text-red-500 text-sm mt-1">{errors.title}</p>
+              )}
             </div>
             <div className="mb-4">
               <label className="block mb-1">Description</label>
@@ -211,9 +324,12 @@ class UserDashboard extends Component {
                 name="description"
                 value={description}
                 onChange={this.handleChange}
-                className="w-full border border-gray-300 p-2 rounded"
+                className={`w-full border ${errors.description ? 'border-red-500' : 'border-gray-300'} p-2 rounded`}
                 required
               />
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+              )}
             </div>
             {successMessage && (
               <p className="text-green-500 mt-4">{successMessage}</p>

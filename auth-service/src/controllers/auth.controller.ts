@@ -66,7 +66,7 @@ export const login = catchAsync(
       });
     } else {
       res
-        .status(httpStatus.UNAUTHORIZED)
+        .status(result.statusCode || httpStatus.UNAUTHORIZED)
         .json({ success: false, message: 'user is unauthorized' });
     }
   },

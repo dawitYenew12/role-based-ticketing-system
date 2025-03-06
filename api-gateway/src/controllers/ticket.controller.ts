@@ -4,6 +4,10 @@ import { catchAsync } from '../utils/catchAsync';
 import logger from '../config/logger';
 import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
+import {
+  getCachedTicket,
+  cacheTicketData,
+} from '../services/tickets.catche.service';
 
 export const generateTicket = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
@@ -38,6 +42,7 @@ export const getAllTickets = catchAsync(
     const userId = req.user.userId;
     const userRole = req.user.role;
     const authorization = req.headers.authorization;
+
     if (userRole !== 'admin201') {
       logger.info(`Unauthorized access attempt by user ${req.user.userId}`);
       res
@@ -47,6 +52,15 @@ export const getAllTickets = catchAsync(
     }
 
     try {
+      // Check Redis cache first
+      const cachedTickets = await getCachedTicket('allTickets');
+      if (cachedTickets) {
+        logger.info('Serving tickets from cache');
+        res.status(httpStatus.OK).json(cachedTickets);
+        return;
+      }
+
+      // Fetch from the ticket service if not in cache
       const response = await axios.get('http://localhost:3002/v1/tickets/all', {
         headers: {
           'x-user-id': userId,
@@ -54,6 +68,9 @@ export const getAllTickets = catchAsync(
           Authorization: authorization,
         },
       });
+
+      // Cache the result in Redis
+      await cacheTicketData('allTickets', response.data);
 
       res.status(response.status).json(response.data);
     } catch (error: any) {
@@ -94,7 +111,6 @@ export const getOwnTickets = catchAsync(
         Authorization: authorization,
       },
     });
-    logger.info(`Tickets retrieved for user ${userId}`);
     res.status(response.status).json(response.data);
   },
 );
@@ -121,7 +137,6 @@ export const updateTicketStatus = catchAsync(
           },
         },
       );
-      logger.info('after');
 
       logger.info(`Ticket ${id} status updated successfully`);
       res.status(response.status).json(response.data);

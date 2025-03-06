@@ -48,7 +48,8 @@ export const errorHandler = (
   res.locals.errorMessage = message;
 
   if (config.env === 'development') {
-    logger.error(err);
+    logger.info(statusCode);
+    logger.error('error: ', err);
   }
 
   res.status(statusCode).json(response);

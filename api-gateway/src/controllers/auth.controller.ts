@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import { catchAsync } from '../utils/catchAsync';
 import logger from '../config/logger';
+import httpStatus from 'http-status';
 
 export const signup = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
@@ -63,15 +64,65 @@ export const signupBySelectingRole = catchAsync(
 
 export const login = catchAsync(
   async (req: Request, res: Response): Promise<void> => {
-    const { email, password } = req.body;
-    // Forward request to Auth Service
-    const response = await axios.post('http://localhost:3001/v1/auth/login', {
-      email,
-      password,
-    });
+    try {
+      const { email, password } = req.body;
 
-    logger.info(`User logged in: ${email}`);
-    res.status(response.status).json(response.data);
+      if (!email || !password) {
+        logger.warn('Login attempt with missing credentials');
+        res.status(httpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'Email and password are required',
+        });
+        return;
+      }
+
+      // Forward request to Auth Service
+      const response = await axios.post('http://localhost:3001/v1/auth/login', {
+        email,
+        password,
+      });
+
+      logger.info(`User logged in: ${email}`);
+      res.status(response.status).json(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        // Extract response details from Axios error
+        const status = error.response?.status || 500;
+        const data = error.response?.data || {
+          success: false,
+          message: 'Internal Server Error',
+        };
+
+        // Provide more specific error messages based on status code
+        if (status === 401) {
+          logger.warn(`Failed login attempt for email: ${req.body.email}`);
+          res.status(401).json({
+            success: false,
+            message:
+              'Invalid email or password. Please check your credentials and try again.',
+          });
+        } else if (status === 404) {
+          logger.warn(`Login attempt for non-existent user: ${req.body.email}`);
+          res.status(404).json({
+            success: false,
+            message:
+              'User not found. Please check your email or sign up for a new account.',
+          });
+        } else {
+          logger.error(`Login failed: ${data.message}`);
+          res.status(status).json(data);
+        }
+      } else {
+        logger.error(
+          `Unexpected error during login: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        res.status(500).json({
+          success: false,
+          message:
+            'Authentication service unavailable. Please try again later.',
+        });
+      }
+    }
   },
 );
 

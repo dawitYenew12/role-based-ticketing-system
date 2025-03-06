@@ -1,12 +1,78 @@
-# React + Vite
+# Ticketing System Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React application for a role-based ticketing system.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project follows a senior-level architecture with the following structure:
 
-## Expanding the ESLint configuration
+```
+src/
+├── assets/            # Static assets like images, fonts, etc.
+├── components/        # Reusable UI components
+│   ├── common/        # Shared components (Button, Input, etc.)
+│   ├── admin/         # Admin-specific components
+│   ├── user/          # User-specific components
+│   └── auth/          # Authentication-related components
+├── config/            # Configuration files and constants
+├── context/           # React Context API for global state management
+├── hooks/             # Custom React hooks
+├── layouts/           # Page layout components
+├── pages/             # Page components organized by feature
+│   ├── admin/         # Admin pages
+│   ├── auth/          # Authentication pages
+│   └── user/          # User pages
+├── services/          # API services and data fetching
+├── types/             # TypeScript type definitions
+└── utils/             # Utility functions and helpers
+```
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## State Management
+
+The application uses React Context API for global state management with the following contexts:
+
+- **AuthContext**: Manages authentication state, user info, and auth-related actions
+- **UIContext**: Manages UI state like theme, notifications, and loading states
+- **TicketContext**: Manages ticket-related state and actions
+
+## Features
+
+- Role-based authentication (Admin and User roles)
+- Ticket management (create, update, delete, assign)
+- Responsive UI with theme support
+- Form validation
+- Error handling
+- Loading states
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+## Technologies Used
+
+- React 19
+- React Router 7
+- TanStack Query (React Query)
+- Tailwind CSS
+- Vite
+- Axios
+- JWT Authentication
