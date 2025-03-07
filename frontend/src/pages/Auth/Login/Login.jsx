@@ -16,7 +16,8 @@ class Login extends Component {
         email: '',
         password: ''
       },
-      loginError: ''
+      loginError: '',
+      adminButtonClicked: false
     };
   }
 
@@ -104,8 +105,13 @@ class Login extends Component {
     }
   }
 
+  goToAdminDashboard = (navigate) => {
+    this.setState({ adminButtonClicked: true });
+    navigate('/adminDashboard');
+  }
+
   render() {
-    const { email, password, errors, loginError } = this.state;
+    const { email, password, errors, loginError, adminButtonClicked } = this.state;
     
     return (
       <NavigationContext.Consumer>
@@ -155,6 +161,18 @@ class Login extends Component {
               >
                 Login
               </button>
+              
+              {!adminButtonClicked && (
+                <div className="mt-4 text-center">
+                  <button 
+                    type="button" 
+                    onClick={() => this.goToAdminDashboard(navigate)} 
+                    className="w-full bg-purple-500 text-white p-2 rounded hover:bg-purple-600 transition-colors"
+                  >
+                    Go to Admin Dashboard
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         )}
