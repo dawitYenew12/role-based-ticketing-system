@@ -3,6 +3,7 @@ import httpStatus from 'http-status';
 import ApiError from '../utils/ApiError';
 import Ticket, { TicketStatus } from '../models/ticket.model';
 import mongoose from 'mongoose';
+import { getUserDetails } from './user.service';
 
 const createTicket = async (
   title: string,
@@ -35,8 +36,20 @@ const getOwnTickets = async (
       .limit(limit);
     const total = await Ticket.countDocuments({ createdBy: userId });
 
+    // Add creator email to each ticket
+    const ticketsWithCreatorEmail = await Promise.all(
+      tickets.map(async (ticket) => {
+        const ticketObj = ticket.toObject();
+        const userDetails = await getUserDetails(String(ticket.createdBy));
+        return {
+          ...ticketObj,
+          createdByEmail: userDetails?.email || 'Unknown',
+        };
+      }),
+    );
+
     return {
-      tickets,
+      tickets: ticketsWithCreatorEmail,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalTickets: total,
@@ -59,8 +72,21 @@ const getAllTickets = async (
     const tickets = await Ticket.find({}).skip(skip).limit(limit);
     const total = await Ticket.countDocuments({});
 
+    // Add creator email to each ticket
+    const ticketsWithCreatorEmail = await Promise.all(
+      tickets.map(async (ticket) => {
+        const ticketObj = ticket.toObject();
+        const userDetails = await getUserDetails(String(ticket.createdBy));
+        logger.info(userDetails);
+        return {
+          ...ticketObj,
+          createdByEmail: userDetails?.email || 'Unknown',
+        };
+      }),
+    );
+
     return {
-      tickets,
+      tickets: ticketsWithCreatorEmail,
       currentPage: page,
       totalPages: Math.ceil(total / limit),
       totalTickets: total,

@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-// import { useNavigate } from 'react-router-dom';
-import { withNavigation } from './withNavigation';
-// import { useNavigation } from './NavigationContext';
-import { NavigationContext } from './NavigationContext';
-import { validatePassword } from '../utils/validation';
+import { withNavigation } from '../../../utils/withNavigation.jsx';
+import { NavigationContext } from '../../../context/NavigationContext.jsx';
+import { validatePassword } from '../../../utils/validation.jsx';
 import { message } from 'antd';
 
 class Login extends Component {

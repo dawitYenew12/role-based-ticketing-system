@@ -48,8 +48,23 @@ export async function getCachedTicket(
 export async function removeCachedTicket(ticketId: string): Promise<void> {
   try {
     const key = `${TICKET_CACHE_PREFIX}${ticketId}`;
-    await redisClient.del(key);
-    logger.info(`Removed cached data for ticket ${ticketId}`);
+
+    // Check if the key contains a wildcard
+    if (key.includes('*')) {
+      // Get all keys matching the pattern
+      const keys = await redisClient.keys(key);
+      if (keys.length > 0) {
+        // Delete all matching keys
+        await redisClient.del(keys);
+        logger.info(
+          `Removed ${keys.length} cached entries matching pattern ${key}`,
+        );
+      }
+    } else {
+      // Delete a single key
+      await redisClient.del(key);
+      logger.info(`Removed cached data for ticket ${ticketId}`);
+    }
   } catch (error) {
     logger.error('Error removing cached ticket data:', error);
     throw error;

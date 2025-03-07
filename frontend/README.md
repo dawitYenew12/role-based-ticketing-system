@@ -4,45 +4,69 @@ A modern React application for a role-based ticketing system.
 
 ## Architecture
 
-This project follows a senior-level architecture with the following structure:
+This project follows a modular architecture with the following structure:
 
 ```
-src/
-├── assets/            # Static assets like images, fonts, etc.
-├── components/        # Reusable UI components
-│   ├── common/        # Shared components (Button, Input, etc.)
-│   ├── admin/         # Admin-specific components
-│   ├── user/          # User-specific components
-│   └── auth/          # Authentication-related components
-├── config/            # Configuration files and constants
-├── context/           # React Context API for global state management
-├── hooks/             # Custom React hooks
-├── layouts/           # Page layout components
-├── pages/             # Page components organized by feature
-│   ├── admin/         # Admin pages
-│   ├── auth/          # Authentication pages
-│   └── user/          # User pages
-├── services/          # API services and data fetching
-├── types/             # TypeScript type definitions
-└── utils/             # Utility functions and helpers
+frontend/
+├── public/                  # Static files
+│   ├── index.html           # Main HTML file
+│   └── assets/              # Static assets
+│
+├── src/                     # Source code
+│   ├── components/          # Reusable UI components (class-based)
+│   │   └── ...              # Other components
+│   │
+│   ├── pages/               # Page-level components (class-based)
+│   │   ├── AdminDashboard/  # Admin dashboard
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   └── index.js
+│   │   ├── UserDashboard/   # User dashboard
+│   │   │   ├── UserDashboard.jsx
+│   │   │   └── index.js
+│   │   ├── Home/            # Home page
+│   │   │   ├── Dashboard.jsx
+│   │   │   └── index.js
+│   │   └── Auth/            # Authentication pages
+│   │       ├── Login/
+│   │       ├── Signup/
+│   │       ├── SignupWithRole/
+│   │       └── index.js
+│   │
+│   ├── context/             # React Context API files
+│   │   ├── NavigationContext.js
+│   │   └── ...
+│   │
+│   ├── layouts/             # Layout components (class-based)
+│   │   ├── MainLayout.jsx
+│   │   └── index.js
+│   │
+│   ├── utils/               # Utility functions and helpers
+│   │   ├── withNavigation.js
+│   │   ├── validation.js
+│   │   └── ...
+│   │
+│   ├── services/            # API services
+│   │   ├── authService.js
+│   │   ├── ticketService.js
+│   │   └── index.js
+│   │
+│   ├── config/              # Configuration files
+│   │   ├── constants.js
+│   │   ├── queryClient.js
+│   │   └── ...
+│   │
+│   ├── assets/              # Global assets
+│   │
+│   ├── App.jsx              # Main App component
+│   └── main.jsx             # Entry point
 ```
-
-## State Management
-
-The application uses React Context API for global state management with the following contexts:
-
-- **AuthContext**: Manages authentication state, user info, and auth-related actions
-- **UIContext**: Manages UI state like theme, notifications, and loading states
-- **TicketContext**: Manages ticket-related state and actions
 
 ## Features
 
-- Role-based authentication (Admin and User roles)
-- Ticket management (create, update, delete, assign)
-- Responsive UI with theme support
-- Form validation
-- Error handling
-- Loading states
+- Authentication (Login, Signup, Role-based Signup)
+- User Dashboard for creating and viewing tickets
+- Admin Dashboard for managing tickets and users
+- Role-based access control
 
 ## Getting Started
 
@@ -76,3 +100,4 @@ npm run build
 - Vite
 - Axios
 - JWT Authentication
+- Ant Design

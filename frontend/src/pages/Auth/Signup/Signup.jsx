@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-// import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { withNavigation } from './withNavigation';
-import { NavigationContext } from './NavigationContext';
+import { withNavigation } from '../../../utils/withNavigation.jsx';
+import { NavigationContext } from '../../../context/NavigationContext.jsx';
 
 class Signup extends Component {
   constructor(props) {

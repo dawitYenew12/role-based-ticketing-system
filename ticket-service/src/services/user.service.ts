@@ -34,7 +34,9 @@ export const initializeUserService = async (): Promise<void> => {
 export const getUserDetails = async (
   userId: string,
 ): Promise<{ email: string; role: string } | null> => {
+  logger.info(userId);
   const userData = await redisClient.get(`user:${userId}`);
+  logger.info('user data: ', userData);
   if (userData) {
     return JSON.parse(userData);
   }

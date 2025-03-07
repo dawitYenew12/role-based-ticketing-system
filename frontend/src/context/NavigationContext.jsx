@@ -12,4 +12,4 @@ export const NavigationProvider = ({ children }) => {
   );
 };
 
-export const useNavigation = () => useContext(NavigationContext); 
+export const useNavigation = () => useContext(NavigationContext);

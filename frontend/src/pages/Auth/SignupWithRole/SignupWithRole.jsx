@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import { withNavigation } from './withNavigation';
-import { NavigationContext } from './NavigationContext';
+import { withNavigation } from '../../../utils/withNavigation.jsx';
+import { NavigationContext } from '../../../context/NavigationContext.jsx';
 
 class SignupWithRole extends Component {
   constructor(props) {
@@ -46,6 +46,7 @@ class SignupWithRole extends Component {
     const { email, password, role, showDropdown, successMessage } = this.state;
     return (
       <NavigationContext.Consumer>
+        {navigate => (
           <div className="min-h-screen flex items-center justify-center">
             <form onSubmit={this.handleSubmit} className="bg-white p-6 rounded shadow-md w-full max-w-sm">
               <h2 className="text-2xl mb-4">Signup with Role</h2>
@@ -73,9 +74,10 @@ class SignupWithRole extends Component {
               {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
             </form>
           </div>
+        )}
       </NavigationContext.Consumer>
     );
   }
 }
 
-export default withNavigation(SignupWithRole);
+export default withNavigation(SignupWithRole); 

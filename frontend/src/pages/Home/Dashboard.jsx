@@ -1,4 +1,5 @@
 import React from 'react';
+import { withNavigation } from '../../utils/withNavigation.jsx';
 
 class Dashboard extends React.Component {
   render() {
@@ -10,4 +11,4 @@ class Dashboard extends React.Component {
   }
 }
 
-export default Dashboard; 
+export default withNavigation(Dashboard); 

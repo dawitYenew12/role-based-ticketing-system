@@ -8,8 +8,13 @@ services:
     env_file: ./api-gateway/.env
     depends_on:
       - rabbitmq
+      - redis
+      - mongodb
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@localhost:8090
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379
+      - DB_URI=mongodb://mongodb:27017/api-gateway
+    restart: unless-stopped
   auth-service:
     build: ./auth-service
     ports:
@@ -17,8 +22,11 @@ services:
     env_file: ./auth-service/.env
     depends_on:
       - rabbitmq
+      - mongodb
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@localhost:8090
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DB_URI=mongodb://mongodb:27017/auth-service
+    restart: unless-stopped
   user-service:
     build: ./user-service
     ports:
@@ -26,8 +34,11 @@ services:
     env_file: ./user-service/.env
     depends_on:
       - rabbitmq
+      - mongodb
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@localhost:8090
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DB_URI=mongodb://mongodb:27017/user-service
+    restart: unless-stopped
   ticket-service:
     build: ./ticket-service
     ports:
@@ -35,12 +46,17 @@ services:
     env_file: ./ticket-service/.env
     depends_on:
       - rabbitmq
+      - redis
+      - mongodb
     environment:
-      - RABBITMQ_URL=amqp://guest:guest@localhost:8090
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379
+      - DB_URI=mongodb://mongodb:27017/ticket-service
+    restart: unless-stopped
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-      - "8090:15672"
+      - "15672:15672"
       - "5672:5672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
@@ -48,3 +64,22 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: unless-stopped
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  mongodb-data:

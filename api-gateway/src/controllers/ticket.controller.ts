@@ -7,6 +7,7 @@ import ApiError from '../utils/ApiError';
 import {
   getCachedTicket,
   cacheTicketData,
+  removeCachedTicket,
 } from '../services/tickets.catche.service';
 
 export const generateTicket = catchAsync(
@@ -28,6 +29,10 @@ export const generateTicket = catchAsync(
         },
       },
     );
+
+    // Invalidate all ticket caches when a new ticket is created
+    await removeCachedTicket('allTickets*');
+    logger.info('All tickets caches invalidated after new ticket creation');
 
     res.status(response.status).json(response.data);
   },
@@ -51,28 +56,38 @@ export const getAllTickets = catchAsync(
       return;
     }
 
+    // Extract pagination parameters
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+    const cacheKey = `allTickets:page${page}:limit${limit}`;
+
     try {
-      // Check Redis cache first
-      const cachedTickets = await getCachedTicket('allTickets');
+      // Check Redis cache first with pagination parameters in the key
+      const cachedTickets = await getCachedTicket(cacheKey);
       if (cachedTickets) {
-        logger.info('Serving tickets from cache');
+        logger.info(
+          `Serving tickets from cache for page ${page}, limit ${limit}`,
+        );
         res.status(httpStatus.OK).json(cachedTickets);
         return;
+      } else {
+        // Fetch from the ticket service if not in cache
+        const response = await axios.get(
+          `http://localhost:3002/v1/tickets/all?page=${page}&limit=${limit}`,
+          {
+            headers: {
+              'x-user-id': userId,
+              'x-user-role': userRole,
+              Authorization: authorization,
+            },
+          },
+        );
+
+        // Cache the result in Redis with pagination parameters in the key
+        await cacheTicketData(cacheKey, response.data);
+
+        res.status(response.status).json(response.data);
       }
-
-      // Fetch from the ticket service if not in cache
-      const response = await axios.get('http://localhost:3002/v1/tickets/all', {
-        headers: {
-          'x-user-id': userId,
-          'x-user-role': userRole,
-          Authorization: authorization,
-        },
-      });
-
-      // Cache the result in Redis
-      await cacheTicketData('allTickets', response.data);
-
-      res.status(response.status).json(response.data);
     } catch (error: any) {
       if (error.response) {
         logger.error(
@@ -137,6 +152,10 @@ export const updateTicketStatus = catchAsync(
           },
         },
       );
+
+      // Invalidate all ticket caches when a ticket is updated
+      await removeCachedTicket('allTickets*');
+      logger.info('All tickets caches invalidated after ticket update');
 
       logger.info(`Ticket ${id} status updated successfully`);
       res.status(response.status).json(response.data);

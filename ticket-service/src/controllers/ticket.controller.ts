@@ -37,7 +37,12 @@ export const getAllTickets = catchAsync(async (req: Request, res: Response) => {
   if (userRole !== 'admin201') {
     throw new ApiError(httpStatus.FORBIDDEN, 'User not authorized');
   }
-  const tickets = await ticketService.getAllTickets();
+
+  // Extract pagination parameters from query
+  const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+
+  const tickets = await ticketService.getAllTickets(page, limit);
   logger.info('Tickets: ', JSON.stringify(tickets));
   res.status(httpStatus.OK).json({ sucess: true, data: tickets });
 });

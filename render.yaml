@@ -1,0 +1,131 @@
+services:
+  # API Gateway Service
+  - type: web
+    name: api-gateway
+    env: docker
+    dockerfilePath: ./api-gateway/Dockerfile
+    dockerContext: ./api-gateway
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: RABBITMQ_URL
+        fromService:
+          type: pserv
+          name: rabbitmq
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: redis
+          property: connectionString
+      - key: DB_URI
+        fromService:
+          type: pserv
+          name: mongodb
+          property: connectionString
+
+  # Auth Service
+  - type: web
+    name: auth-service
+    env: docker
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: RABBITMQ_URL
+        fromService:
+          type: pserv
+          name: rabbitmq
+          property: connectionString
+      - key: DB_URI
+        fromService:
+          type: pserv
+          name: mongodb
+          property: connectionString
+
+  # User Service
+  - type: web
+    name: user-service
+    env: docker
+    dockerfilePath: ./user-service/Dockerfile
+    dockerContext: ./user-service
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: RABBITMQ_URL
+        fromService:
+          type: pserv
+          name: rabbitmq
+          property: connectionString
+      - key: DB_URI
+        fromService:
+          type: pserv
+          name: mongodb
+          property: connectionString
+
+  # Ticket Service
+  - type: web
+    name: ticket-service
+    env: docker
+    dockerfilePath: ./ticket-service/Dockerfile
+    dockerContext: ./ticket-service
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3003
+      - key: RABBITMQ_URL
+        fromService:
+          type: pserv
+          name: rabbitmq
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: redis
+          property: connectionString
+      - key: DB_URI
+        fromService:
+          type: pserv
+          name: mongodb
+          property: connectionString
+
+  # RabbitMQ Service
+  - type: pserv
+    name: rabbitmq
+    env: docker
+    repo: https://github.com/render-examples/rabbitmq.git
+    envVars:
+      - key: RABBITMQ_DEFAULT_USER
+        generateValue: true
+      - key: RABBITMQ_DEFAULT_PASS
+        generateValue: true
+
+  # Redis Service
+  - type: redis
+    name: redis
+    ipAllowList: # required
+      - source: 0.0.0.0/0
+        description: everywhere
+    plan: free
+
+  # MongoDB Service
+  - type: pserv
+    name: mongodb
+    env: docker
+    repo: https://github.com/render-examples/mongodb.git
+    disk:
+      name: data
+      mountPath: /data/db
+      sizeGB: 10 
