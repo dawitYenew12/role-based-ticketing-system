@@ -19,7 +19,7 @@ services:
           name: redis
           property: connectionString
       - key: DB_URI
-        value: mongodb://mongodb:27017/api-gateway
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/api-gateway
 
   # Auth Service
   - type: web
@@ -36,7 +36,7 @@ services:
       - key: RABBITMQ_URL
         value: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       - key: DB_URI
-        value: mongodb://mongodb:27017/auth-service
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/auth-service
 
   # User Service
   - type: web
@@ -53,7 +53,7 @@ services:
       - key: RABBITMQ_URL
         value: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       - key: DB_URI
-        value: mongodb://mongodb:27017/user-service
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/user-service
 
   # Ticket Service
   - type: web
@@ -75,7 +75,7 @@ services:
           name: redis
           property: connectionString
       - key: DB_URI
-        value: mongodb://mongodb:27017/ticket-service
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/ticket-service
 
   # RabbitMQ Service
   - type: pserv
