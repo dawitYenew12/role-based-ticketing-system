@@ -12,20 +12,14 @@ services:
       - key: PORT
         value: 3000
       - key: RABBITMQ_URL
-        fromService:
-          type: pserv
-          name: rabbitmq
-          property: connectionString
+        value: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       - key: REDIS_URL
         fromService:
           type: redis
           name: redis
           property: connectionString
       - key: DB_URI
-        fromService:
-          type: pserv
-          name: mongodb
-          property: connectionString
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/api-gateway
 
   # Auth Service
   - type: web
@@ -40,15 +34,9 @@ services:
       - key: PORT
         value: 3001
       - key: RABBITMQ_URL
-        fromService:
-          type: pserv
-          name: rabbitmq
-          property: connectionString
+        value: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       - key: DB_URI
-        fromService:
-          type: pserv
-          name: mongodb
-          property: connectionString
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/auth-service
 
   # User Service
   - type: web
@@ -63,15 +51,9 @@ services:
       - key: PORT
         value: 3002
       - key: RABBITMQ_URL
-        fromService:
-          type: pserv
-          name: rabbitmq
-          property: connectionString
+        value: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       - key: DB_URI
-        fromService:
-          type: pserv
-          name: mongodb
-          property: connectionString
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/user-service
 
   # Ticket Service
   - type: web
@@ -86,20 +68,14 @@ services:
       - key: PORT
         value: 3003
       - key: RABBITMQ_URL
-        fromService:
-          type: pserv
-          name: rabbitmq
-          property: connectionString
+        value: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672
       - key: REDIS_URL
         fromService:
           type: redis
           name: redis
           property: connectionString
       - key: DB_URI
-        fromService:
-          type: pserv
-          name: mongodb
-          property: connectionString
+        value: mongodb+srv://wizdevaxo06464:45V8LUDQAc0oRyw@rolebasedticketing.3dmo4.mongodb.net/?retryWrites=true&w=majority&appName=roleBasedTicketing/ticket-service
 
   # RabbitMQ Service
   - type: pserv
