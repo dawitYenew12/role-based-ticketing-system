@@ -55,6 +55,15 @@ const startServer = async () => {
     );
   }
 
+  // Add health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(httpStatus.OK).json({
+      status: 'ok',
+      service: 'auth-service',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   app.use('/v1/auth', authRoutes);
 
   app.use((req, res, next) => {
